@@ -126,19 +126,14 @@ int main()
     {
         // Aqui executamos as operações de renderização
 
-        // Definimos a cor do "fundo" do framebuffer como branco.  Tal cor é
-        // definida como coeficientes RGBA: Red, Green, Blue, Alpha; isto é:
-        // Vermelho, Verde, Azul, Alpha (valor de transparência).
-        // Conversaremos sobre sistemas de cores nas aulas de Modelos de Iluminação.
-        //
-        //           R     G     B     A
+        // Definimos a cor do "fundo" do framebuffer como branco
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
         // "Pintamos" todos os pixels do framebuffer com a cor definida acima
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Pedimos para a GPU utilizar o programa de GPU criado acima (contendo
-        // os shaders de vértice e fragmentos).
+        // os shaders de vértice e fragmentos)
         glUseProgram(g_GpuProgramID);
 
         // "Ligamos" o VAO. Informamos que queremos utilizar os atributos de
@@ -147,32 +142,17 @@ int main()
         glBindVertexArray(vertex_array_object_id);
 
         // Pedimos para a GPU rasterizar os vértices apontados pelo VAO como
-        // triângulos.
-        //
-        //                +--- Veja slides 182-188 do documento Aula_04_Modelagem_Geometrica_3D.pdf.
-        //                |          +--- O array "indices[]" contém "external_points_count + 1" índices (veja função BuildTriangles()).
-        //                |          |  +--- Os índices são do tipo "GLubyte" (8 bits sem sinal)
-        //                |          |  |                 +--- Vértices começam em indices[0] (veja função BuildTriangles()).
-        //                |          |  |                 |
-        //                V          V  V                 V
+        // triângulos
         glDrawElements(GL_TRIANGLE_FAN, points_count + 1, GL_UNSIGNED_BYTE, 0);
 
         // "Desligamos" o VAO, evitando assim que operações posteriores venham a
-        // alterar o mesmo. Isso evita bugs.
+        // alterar o mesmo. Isso evita bugs
         glBindVertexArray(0);
 
-        // O framebuffer onde OpenGL executa as operações de renderização não
-        // é o mesmo que está sendo mostrado para o usuário, caso contrário
-        // seria possível ver artefatos conhecidos como "screen tearing". A
-        // chamada abaixo faz a troca dos buffers, mostrando para o usuário
-        // tudo que foi renderizado pelas funções acima.
-        // Veja o link: https://en.wikipedia.org/w/index.php?title=Multiple_buffering&oldid=793452829#Double_buffering_in_computer_graphics
         glfwSwapBuffers(window);
 
         // Verificamos com o sistema operacional se houve alguma interação do
-        // usuário (teclado, mouse, ...). Caso positivo, as funções de callback
-        // definidas anteriormente usando glfwSet*Callback() serão chamadas
-        // pela biblioteca GLFW.
+        // usuário (teclado, mouse, ...)
         glfwPollEvents();
     }
 
