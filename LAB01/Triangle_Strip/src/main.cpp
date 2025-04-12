@@ -144,7 +144,7 @@ int main()
 
         // Pedimos para a GPU rasterizar os vértices apontados pelo VAO como
         // triângulos
-        glDrawElements(GL_TRIANGLE_STRIP, 2 * external_points_count + 1, GL_UNSIGNED_BYTE, 0);
+        glDrawElements(GL_TRIANGLE_STRIP, 2 * external_points_count + 2, GL_UNSIGNED_BYTE, 0);
 
         // "Desligamos" o VAO, evitando assim que operações posteriores venham a
         // alterar o mesmo. Isso evita bugs
@@ -181,23 +181,35 @@ GLuint BuildTriangles(GLfloat external_radius, GLfloat internal_radius, GLuint e
     std::vector<GLubyte> indices;
 
     // Calcular e colocar todos os dados dos pontos (posição, cor e topologia)
-    GLfloat step = 2.0f * M_PI / (points_count - 1);
-    for(GLuint i = 1; i < points_count; i++){
-        // Calcular os pontos por coordenadas polares
-        NDC_coefficients.push_back(radius * cosf(step * (i - 1)));
-        NDC_coefficients.push_back(radius * sinf(step * (i - 1)));
+    GLfloat step = 2.0f * M_PI / external_points_count;
+    for(GLuint i = 0; i < external_points_count; i++){
+        // Calcular os pontos internos
+        NDC_coefficients.push_back(internal_radius * cosf(step * i));
+        NDC_coefficients.push_back(internal_radius * sinf(step * i));
+        NDC_coefficients.push_back(0.0f);
+        NDC_coefficients.push_back(1.0f);
+        // Calcular os pontos externos
+        NDC_coefficients.push_back(external_radius * cosf(step * i));
+        NDC_coefficients.push_back(external_radius * sinf(step * i));
         NDC_coefficients.push_back(0.0f);
         NDC_coefficients.push_back(1.0f);
 
-        // Estabelecer a cor azul em todos os pontos
+        // Estabelecer a cor vermelha em todos os pontos internos
+        color_coefficients.push_back(1.0f);
+        color_coefficients.push_back(0.0f);
+        color_coefficients.push_back(0.0f);
+        color_coefficients.push_back(1.0f);
+        // Estabelecer a cor azul em todos os pontos externos
         color_coefficients.push_back(0.0f);
         color_coefficients.push_back(0.0f);
         color_coefficients.push_back(1.0f);
         color_coefficients.push_back(1.0f);
 
-        // Construir topologia de TRIANGLE_FAN
-        indices.push_back(GLubyte(i));
+        // Construir topologia de TRIANGLE_STRIP
+        indices.push_back(GLubyte(2 * i));
+        indices.push_back(GLubyte(2 * i + 1));
     }
+    indices.push_back(0);
     indices.push_back(1);
 
     // Construir os VBOs para a posição geométrica
