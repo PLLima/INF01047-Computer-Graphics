@@ -18,6 +18,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <vector>
 
 // Headers abaixo são específicos de C++
 #include <string>
@@ -33,7 +34,7 @@
 
 // Declaração de várias funções utilizadas em main().  Essas estão definidas
 // logo após a definição de main() neste arquivo.
-GLuint BuildTriangles(GLfloat radius, GLuint external_points_count); // Constrói triângulos para renderização
+GLuint BuildTriangles(GLfloat radius, GLuint points_count); // Constrói triângulos para renderização
 void LoadShadersFromFiles(); // Carrega os shaders de vértice e fragmento, criando um programa de GPU
 GLuint LoadShader_Vertex(const char* filename);   // Carrega um vertex shader
 GLuint LoadShader_Fragment(const char* filename); // Carrega um fragment shader
@@ -117,8 +118,8 @@ int main()
 
     // Construímos a representação de um triângulo
     GLfloat radius = 0.7f;
-    GLuint external_points_count = 16;
-    GLuint vertex_array_object_id = BuildTriangles(radius, external_points_count);
+    GLuint points_count = 17;
+    GLuint vertex_array_object_id = BuildTriangles(radius, points_count);
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
@@ -154,7 +155,7 @@ int main()
         //                |          |  |                 +--- Vértices começam em indices[0] (veja função BuildTriangles()).
         //                |          |  |                 |
         //                V          V  V                 V
-        glDrawElements(GL_TRIANGLE_FAN, external_points_count + 2, GL_UNSIGNED_BYTE, 0);
+        glDrawElements(GL_TRIANGLE_FAN, points_count + 1, GL_UNSIGNED_BYTE, 0);
 
         // "Desligamos" o VAO, evitando assim que operações posteriores venham a
         // alterar o mesmo. Isso evita bugs.
@@ -183,54 +184,49 @@ int main()
 }
 
 // Constrói triângulos para futura renderização
-GLuint BuildTriangles(GLfloat radius, GLuint external_points_count)
+GLuint BuildTriangles(GLfloat radius, GLuint points_count)
 {
     // Definir dados vetoriais
     GLuint point_coords = 4;
     GLuint color_coding = 4;
 
     // Colocar o primeiro ponto na origem
-    GLuint NDC_coefficients_size = (external_points_count + 1) * point_coords;
-    GLfloat *NDC_coefficients = new GLfloat[NDC_coefficients_size];
+    std::vector<GLfloat> NDC_coefficients;
     for(GLuint i = 0; i < point_coords - 1; i++){
-        NDC_coefficients[i] = 0.0f;
+        NDC_coefficients.push_back(0.0f);
     }
-    NDC_coefficients[point_coords - 1] = 1.0f;
+    NDC_coefficients.push_back(1.0f);
 
     // Colocar o primeiro ponto como vermelho
-    GLuint color_coefficients_size = (external_points_count + 1) * color_coding;
-    GLfloat *color_coefficients = new GLfloat[color_coefficients_size];
-    color_coefficients[0] = 1.0f;
-    color_coefficients[1] = 0.0f;
-    color_coefficients[2] = 0.0f;
-    color_coefficients[3] = 1.0f;
+    std::vector<GLfloat> color_coefficients;
+    color_coefficients.push_back(1.0f);
+    color_coefficients.push_back(0.0f);
+    color_coefficients.push_back(0.0f);
+    color_coefficients.push_back(1.0f);
 
     // Inicializar o vetor de índices
-    GLuint indices_size = (external_points_count + 2);
-    GLubyte *indices = new GLubyte[indices_size];
-    indices[0] = 0;
-    indices[external_points_count + 1] = 1;
+    std::vector<GLubyte> indices;
+    indices.push_back(0);
 
     // Calcular e colocar todos os dados dos pontos (posição, cor e topologia)
-    GLfloat step = 2.0f * M_PI / external_points_count;
-    for(GLuint i = 1; i <= external_points_count; i++){
+    GLfloat step = 2.0f * M_PI / (points_count - 1);
+    for(GLuint i = 1; i < points_count; i++){
         // Calcular os pontos por coordenadas polares
-        NDC_coefficients[point_coords * i] = radius * cosf(step * (i - 1));
-        NDC_coefficients[point_coords * i + 1] = radius * sinf(step * (i - 1));
-        NDC_coefficients[point_coords * i + 2] = 0.0f;
-        NDC_coefficients[point_coords * i + 3] = 1.0f;
+        NDC_coefficients.push_back(radius * cosf(step * (i - 1)));
+        NDC_coefficients.push_back(radius * sinf(step * (i - 1)));
+        NDC_coefficients.push_back(0.0f);
+        NDC_coefficients.push_back(1.0f);
 
         // Estabelecer a cor azul em todos os pontos
-        color_coefficients[color_coding * i] = 0.0f;
-        color_coefficients[color_coding * i + 1] = 0.0f;
-        color_coefficients[color_coding * i + 2] = 1.0f;
-        color_coefficients[color_coding * i + 3] = 1.0f;
+        color_coefficients.push_back(0.0f);
+        color_coefficients.push_back(0.0f);
+        color_coefficients.push_back(1.0f);
+        color_coefficients.push_back(1.0f);
 
         // Construir topologia de TRIANGLE_FAN
-        indices[i] = GLubyte(i);
-        printf("Indices: %d\n", indices[i]);
-        printf("(%f, %f, %f, %f)\n", NDC_coefficients[point_coords * i], NDC_coefficients[point_coords * i + 1], NDC_coefficients[point_coords * i + 2], NDC_coefficients[point_coords * i + 3]);
+        indices.push_back(GLubyte(i));
     }
+    indices.push_back(1);
 
     // Construir os VBOs para a posição geométrica
     GLuint VBO_NDC_coefficients_id;
@@ -239,8 +235,7 @@ GLuint BuildTriangles(GLfloat radius, GLuint external_points_count)
     glGenVertexArrays(1, &vertex_array_object_id);
     glBindVertexArray(vertex_array_object_id);
     glBindBuffer(GL_ARRAY_BUFFER, VBO_NDC_coefficients_id);
-    glBufferData(GL_ARRAY_BUFFER, NDC_coefficients_size * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, NDC_coefficients_size * sizeof(GLfloat), NDC_coefficients);
+    glBufferData(GL_ARRAY_BUFFER, NDC_coefficients.size() * sizeof(GLfloat), NDC_coefficients.data(), GL_STATIC_DRAW);
     GLuint location = 0; // "(location = 0)" em "shader_vertex.glsl"
     glVertexAttribPointer(location, point_coords, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(location);
@@ -250,8 +245,7 @@ GLuint BuildTriangles(GLfloat radius, GLuint external_points_count)
     GLuint VBO_color_coefficients_id;
     glGenBuffers(1, &VBO_color_coefficients_id);
     glBindBuffer(GL_ARRAY_BUFFER, VBO_color_coefficients_id);
-    glBufferData(GL_ARRAY_BUFFER, color_coefficients_size * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, color_coefficients_size * sizeof(GLfloat), color_coefficients);
+    glBufferData(GL_ARRAY_BUFFER, color_coefficients.size() * sizeof(GLfloat), color_coefficients.data(), GL_STATIC_DRAW);
     location = 1; // "(location = 1)" em "shader_vertex.glsl"
     glVertexAttribPointer(location, color_coding, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(location);
@@ -261,13 +255,8 @@ GLuint BuildTriangles(GLfloat radius, GLuint external_points_count)
     GLuint indices_id;
     glGenBuffers(1, &indices_id);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices_id);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size * sizeof(GLubyte), NULL, GL_STATIC_DRAW);
-    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices_size * sizeof(GLubyte), indices);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLubyte), indices.data(), GL_STATIC_DRAW);
     glBindVertexArray(0);
-
-    delete [] NDC_coefficients;
-    delete [] color_coefficients;
-    delete [] indices;
 
     return vertex_array_object_id;
 }
