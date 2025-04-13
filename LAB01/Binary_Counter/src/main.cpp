@@ -36,6 +36,7 @@
 // logo após a definição de main() neste arquivo.
 GLuint BuildScene(GLuint count);
 std::vector<GLubyte> DecimalToBinary(GLuint decimal_number, GLuint range);
+
 GLuint BuildTriangles(GLfloat external_radius, GLfloat internal_radius, GLuint external_points_count); // Constrói triângulos para renderização
 void LoadShadersFromFiles(); // Carrega os shaders de vértice e fragmento, criando um programa de GPU
 GLuint LoadShader_Vertex(const char* filename);   // Carrega um vertex shader
@@ -78,10 +79,10 @@ int main()
     // funções modernas de OpenGL.
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // Criamos uma janela do sistema operacional, com 500 colunas e 500 linhas
+    // Criamos uma janela do sistema operacional, com 1200 colunas e 500 linhas
     // de pixels, e com título "INF01047 ...".
     GLFWwindow* window;
-    window = glfwCreateWindow(500, 500, "INF01047 - 341810 - Pedro Lubaszewski Lima", NULL, NULL);
+    window = glfwCreateWindow(1200, 500, "INF01047 - 341810 - Pedro Lubaszewski Lima", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -184,6 +185,10 @@ GLuint BuildScene(GLuint count){
 
     // Converter decimal para binário (little endian)
     std::vector<GLubyte> binary_count = DecimalToBinary(count, 4);
+
+    for(GLuint i : binary_count){
+        
+    }
 
     // Construir os VBOs para a posição geométrica
     GLuint VBO_NDC_coefficients_id;
