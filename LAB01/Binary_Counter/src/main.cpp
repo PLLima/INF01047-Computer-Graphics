@@ -34,6 +34,7 @@
 
 // Declaração de várias funções utilizadas em main().  Essas estão definidas
 // logo após a definição de main() neste arquivo.
+GLuint BuildScene(GLubyte count);
 GLuint BuildTriangles(GLfloat external_radius, GLfloat internal_radius, GLuint external_points_count); // Constrói triângulos para renderização
 void LoadShadersFromFiles(); // Carrega os shaders de vértice e fragmento, criando um programa de GPU
 GLuint LoadShader_Vertex(const char* filename);   // Carrega um vertex shader
@@ -164,7 +165,57 @@ int main()
     return 0;
 }
 
-// Constrói triângulos para futura renderização
+// Montar os triângulos para um respectivo valor de contagem
+GLuint BuildScene(GLubyte count){
+    
+    // Definir dados vetoriais
+    GLuint point_coords = 4;
+    GLuint color_coding = 4;
+
+    // Alocar as coordenadas dos pontos
+    std::vector<GLfloat> NDC_coefficients;
+
+    // Alocar as cores dos pontos
+    std::vector<GLfloat> color_coefficients;
+
+    // Alocar o vetor de índices
+    std::vector<GLubyte> indices;
+
+
+    // Construir os VBOs para a posição geométrica
+    GLuint VBO_NDC_coefficients_id;
+    glGenBuffers(1, &VBO_NDC_coefficients_id);
+    GLuint vertex_array_object_id;
+    glGenVertexArrays(1, &vertex_array_object_id);
+    glBindVertexArray(vertex_array_object_id);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_NDC_coefficients_id);
+    glBufferData(GL_ARRAY_BUFFER, NDC_coefficients.size() * sizeof(GLfloat), NDC_coefficients.data(), GL_STATIC_DRAW);
+    GLuint location = 0; // "(location = 0)" em "shader_vertex.glsl"
+    glVertexAttribPointer(location, point_coords, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(location);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // Construir os VBOs para as informações de cores
+    GLuint VBO_color_coefficients_id;
+    glGenBuffers(1, &VBO_color_coefficients_id);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_color_coefficients_id);
+    glBufferData(GL_ARRAY_BUFFER, color_coefficients.size() * sizeof(GLfloat), color_coefficients.data(), GL_STATIC_DRAW);
+    location = 1; // "(location = 1)" em "shader_vertex.glsl"
+    glVertexAttribPointer(location, color_coding, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(location);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // Construir o VBO para a topologia
+    GLuint indices_id;
+    glGenBuffers(1, &indices_id);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices_id);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLubyte), indices.data(), GL_STATIC_DRAW);
+    glBindVertexArray(0);
+
+    return vertex_array_object_id;
+}
+
+// Construir triângulos para futura renderização
 GLuint BuildTriangles(GLfloat external_radius, GLfloat internal_radius, GLuint external_points_count)
 {
     // Definir dados vetoriais
