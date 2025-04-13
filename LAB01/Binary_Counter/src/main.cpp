@@ -175,6 +175,11 @@ GLuint BuildScene(GLuint count){
     GLuint point_coords = 4;
     GLuint color_coding = 4;
 
+    // Definir tamanhos e posições básicas dos dígitos
+    GLuint zero_external_points = 16;
+    GLfloat center_step = 0.5f;
+    std::vector<GLfloat> NDC_center = {0.75f, 0.0f, 0.0f, 1.0f};
+
     // Alocar as coordenadas dos pontos
     std::vector<GLfloat> NDC_coefficients;
 
@@ -187,8 +192,15 @@ GLuint BuildScene(GLuint count){
     // Converter decimal para binário (little endian)
     std::vector<GLubyte> binary_count = DecimalToBinary(count, 4);
 
+    // Construir os triângulos de acordo com os valores binários
+    GLubyte last_point = 0;
     for(GLuint i : binary_count){
-        
+        if(i == 0){
+            last_point = BuildZero(&NDC_coefficients, &color_coefficients, &indices, last_point, NDC_center, zero_external_points);
+        }else{
+            last_point = BuildOne(&NDC_coefficients, &color_coefficients, &indices, last_point, NDC_center);
+        }
+        NDC_center[0] -= center_step;
     }
 
     // Construir os VBOs para a posição geométrica
