@@ -36,7 +36,8 @@
 // logo após a definição de main() neste arquivo.
 GLuint BuildScene(GLuint count);
 std::vector<GLubyte> DecimalToBinary(GLuint decimal_number, GLuint range);
-
+std::vector<GLfloat> BuildZero(std::vector<GLfloat> NDC_center, GLuint external_points_count);
+std::vector<GLfloat> BuildOne(std::vector<GLfloat> NDC_center);
 GLuint BuildTriangles(GLfloat external_radius, GLfloat internal_radius, GLuint external_points_count); // Constrói triângulos para renderização
 void LoadShadersFromFiles(); // Carrega os shaders de vértice e fragmento, criando um programa de GPU
 GLuint LoadShader_Vertex(const char* filename);   // Carrega um vertex shader
@@ -233,6 +234,14 @@ std::vector<GLubyte> DecimalToBinary(GLuint decimal_number, GLuint range){
     }
 
     return binary;
+}
+
+std::vector<GLfloat> BuildZero(std::vector<GLfloat> NDC_center, GLuint external_points_count){
+
+}
+
+std::vector<GLfloat> BuildOne(std::vector<GLfloat> NDC_center){
+    
 }
 
 // Construir triângulos para futura renderização
