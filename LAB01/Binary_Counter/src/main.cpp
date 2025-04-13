@@ -182,6 +182,8 @@ GLuint BuildScene(GLuint count){
     // Alocar o vetor de índices
     std::vector<GLubyte> indices;
 
+    // Converter decimal para binário (little endian)
+    std::vector<GLubyte> binary_count = DecimalToBinary(count, 4);
 
     // Construir os VBOs para a posição geométrica
     GLuint VBO_NDC_coefficients_id;
