@@ -238,8 +238,47 @@ std::vector<GLubyte> DecimalToBinary(GLuint decimal_number, GLuint range){
 
 // Gerar pontos, cores e topologia do dígito zero
 GLubyte BuildZero(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLubyte> *topology, GLubyte last_point, std::vector<GLfloat> NDC_center, GLuint external_points_count){
-    
-    
+    // Definir tamanhos básicos do dígito
+    GLfloat x_minor_focus = 0.1f;
+    GLfloat x_major_focus = 0.2f;
+    GLfloat y_minor_focus = 0.6f;
+    GLfloat y_major_focus = 0.7f;
+
+    // Definir coordenadas dos pontos
+    GLfloat step = 2.0f * M_PI / external_points_count;
+    GLfloat radius;
+    for(GLuint i = 0; i < external_points_count; i++){
+
+        // Calcular os pontos internos
+        radius = x_minor_focus*y_minor_focus \
+                / sqrtf(x_minor_focus*x_minor_focus + (y_minor_focus*y_minor_focus - x_minor_focus*x_minor_focus)*cosf(step*i)*cosf(step*i));
+        coordinates->push_back(radius * cosf(step * i) + NDC_center[0]);
+        coordinates->push_back(radius * sinf(step * i) + NDC_center[1]);
+        coordinates->push_back(0.0f);
+        coordinates->push_back(1.0f);
+
+        // Calcular os pontos externos
+        radius = x_major_focus*y_major_focus \
+                / sqrtf(x_major_focus*x_major_focus + (y_major_focus*y_major_focus - x_major_focus*x_major_focus)*cosf(step*i)*cosf(step*i));
+        coordinates->push_back(radius * cosf(step * i) + NDC_center[0]);
+        coordinates->push_back(radius * sinf(step * i) + NDC_center[1]);
+        coordinates->push_back(0.0f);
+        coordinates->push_back(1.0f);
+    }
+
+    // Definir a cor vermelha para o dígito zero e os índices
+    for(GLuint i = 0; i < external_points_count; i++){
+        colors->push_back(1.0f);
+        colors->push_back(0.0f);
+        colors->push_back(0.0f);
+        colors->push_back(1.0f);
+
+        topology->push_back(GLubyte(2 * i + last_point));
+        topology->push_back(GLubyte(2 * i + 1 + last_point));
+    }
+    topology->push_back(last_point);
+    topology->push_back(last_point + 1);
+
     GLubyte next_point = 2 * external_points_count + last_point;
     return next_point;
 }
