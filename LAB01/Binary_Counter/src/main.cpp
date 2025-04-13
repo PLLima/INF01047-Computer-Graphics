@@ -34,7 +34,8 @@
 
 // Declaração de várias funções utilizadas em main().  Essas estão definidas
 // logo após a definição de main() neste arquivo.
-GLuint BuildScene(GLubyte count);
+GLuint BuildScene(GLuint count);
+std::vector<GLubyte> DecimalToBinary(GLuint decimal_number, GLuint range);
 GLuint BuildTriangles(GLfloat external_radius, GLfloat internal_radius, GLuint external_points_count); // Constrói triângulos para renderização
 void LoadShadersFromFiles(); // Carrega os shaders de vértice e fragmento, criando um programa de GPU
 GLuint LoadShader_Vertex(const char* filename);   // Carrega um vertex shader
@@ -166,7 +167,7 @@ int main()
 }
 
 // Montar os triângulos para um respectivo valor de contagem
-GLuint BuildScene(GLubyte count){
+GLuint BuildScene(GLuint count){
     
     // Definir dados vetoriais
     GLuint point_coords = 4;
@@ -213,6 +214,18 @@ GLuint BuildScene(GLubyte count){
     glBindVertexArray(0);
 
     return vertex_array_object_id;
+}
+
+// Converter decimal para um vetor binário (little endian)
+std::vector<GLubyte> DecimalToBinary(GLuint decimal_number, GLuint range){
+    std::vector<GLubyte> binary;
+
+    for(GLuint i = 0; i < range; i++){
+        binary.push_back(decimal_number % 2);
+        decimal_number = decimal_number / 2;
+    }
+
+    return binary;
 }
 
 // Construir triângulos para futura renderização
