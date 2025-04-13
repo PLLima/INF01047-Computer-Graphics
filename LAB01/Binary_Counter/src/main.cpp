@@ -36,8 +36,8 @@
 // logo após a definição de main() neste arquivo.
 GLuint BuildScene(GLuint count);
 std::vector<GLubyte> DecimalToBinary(GLuint decimal_number, GLuint range);
-void BuildZero(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLubyte> *topology, std::vector<GLfloat> NDC_center, GLuint external_points_count);
-void BuildOne(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLubyte> *topology, std::vector<GLfloat> NDC_center);
+GLubyte BuildZero(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLubyte> *topology, GLubyte last_point, std::vector<GLfloat> NDC_center, GLuint external_points_count);
+GLubyte BuildOne(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLubyte> *topology, GLubyte last_point, std::vector<GLfloat> NDC_center);
 GLuint BuildTriangles(GLfloat external_radius, GLfloat internal_radius, GLuint external_points_count); // Constrói triângulos para renderização
 void LoadShadersFromFiles(); // Carrega os shaders de vértice e fragmento, criando um programa de GPU
 GLuint LoadShader_Vertex(const char* filename);   // Carrega um vertex shader
@@ -237,13 +237,59 @@ std::vector<GLubyte> DecimalToBinary(GLuint decimal_number, GLuint range){
 }
 
 // Gerar pontos, cores e topologia do dígito zero
-void BuildZero(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLubyte> *topology, std::vector<GLfloat> NDC_center, GLuint external_points_count){
-
+GLubyte BuildZero(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLubyte> *topology, GLubyte last_point, std::vector<GLfloat> NDC_center, GLuint external_points_count){
+    
+    
+    GLubyte next_point = 2 * external_points_count + last_point;
+    return next_point;
 }
 
 // Gerar pontos, cores e topologia do dígito um
-void BuildOne(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLubyte> *topology, std::vector<GLfloat> NDC_center){
+GLubyte BuildOne(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLubyte> *topology, GLubyte last_point, std::vector<GLfloat> NDC_center){
+    // Definir tamanhos básicos do dígito
+    GLfloat half_base = 0.025f;
+    GLfloat half_height = 0.7f;
+    GLfloat point_x = -0.1f + NDC_center[0];
+    GLfloat point_y = 0.408f + NDC_center[1];
     
+    // Definir coordenadas dos pontos
+    coordinates->push_back(NDC_center[0] - half_base);
+    coordinates->push_back(NDC_center[1] - half_height + 0.008f);
+    coordinates->push_back(0.0f);
+    coordinates->push_back(1.0f);
+
+    coordinates->push_back(NDC_center[0] + half_base);
+    coordinates->push_back(NDC_center[1] - half_height + 0.008f);
+    coordinates->push_back(0.0f);
+    coordinates->push_back(1.0f);
+
+    coordinates->push_back(NDC_center[0] + half_base);
+    coordinates->push_back(NDC_center[1] + half_height + 0.008f);
+    coordinates->push_back(0.0f);
+    coordinates->push_back(1.0f);
+
+    coordinates->push_back(NDC_center[0] - half_base);
+    coordinates->push_back(NDC_center[1] + half_height + 0.008f);
+    coordinates->push_back(0.0f);
+    coordinates->push_back(1.0f);
+
+    coordinates->push_back(point_x);
+    coordinates->push_back(point_y);
+    coordinates->push_back(0.0f);
+    coordinates->push_back(1.0f);
+
+    // Definir a cor azul para o dígito um e os índices
+    for(GLuint i = 0; i < 5; i++){
+        colors->push_back(0.0f);
+        colors->push_back(0.0f);
+        colors->push_back(1.0f);
+        colors->push_back(1.0f);
+
+        topology->push_back(i + last_point);
+    }
+
+    GLubyte next_point = 5 + last_point;
+    return next_point;
 }
 
 // Construir triângulos para futura renderização
