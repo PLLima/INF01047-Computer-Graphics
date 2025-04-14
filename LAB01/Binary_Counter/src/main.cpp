@@ -36,8 +36,8 @@
 // logo após a definição de main() neste arquivo.
 GLuint BuildScene(GLuint count);
 std::vector<GLubyte> DecimalToBinary(GLuint decimal_number, GLuint range);
-GLubyte BuildZero(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLubyte> *topology, GLubyte last_point, std::vector<GLfloat> NDC_center, GLuint external_points_count);
-GLubyte BuildOne(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLubyte> *topology, GLubyte last_point, std::vector<GLfloat> NDC_center);
+GLuint BuildZero(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLuint> *topology, GLuint last_point, std::vector<GLfloat> NDC_center, GLuint external_points_count);
+GLuint BuildOne(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLuint> *topology, GLuint last_point, std::vector<GLfloat> NDC_center);
 GLuint BuildTriangles(GLfloat external_radius, GLfloat internal_radius, GLuint external_points_count); // Constrói triângulos para renderização
 void LoadShadersFromFiles(); // Carrega os shaders de vértice e fragmento, criando um programa de GPU
 GLuint LoadShader_Vertex(const char* filename);   // Carrega um vertex shader
@@ -187,13 +187,13 @@ GLuint BuildScene(GLuint count){
     std::vector<GLfloat> color_coefficients;
 
     // Alocar o vetor de índices
-    std::vector<GLubyte> indices;
+    std::vector<GLuint> indices;
 
     // Converter decimal para binário (little endian)
     std::vector<GLubyte> binary_count = DecimalToBinary(count, 4);
 
     // Construir os triângulos de acordo com os valores binários
-    GLubyte last_point = 0;
+    GLuint last_point = 0;
     for(GLuint i : binary_count){
         if(i == 0){
             last_point = BuildZero(&NDC_coefficients, &color_coefficients, &indices, last_point, NDC_center, zero_external_points);
@@ -230,7 +230,7 @@ GLuint BuildScene(GLuint count){
     GLuint indices_id;
     glGenBuffers(1, &indices_id);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices_id);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLubyte), indices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
     glBindVertexArray(0);
 
     return vertex_array_object_id;
@@ -241,7 +241,7 @@ std::vector<GLubyte> DecimalToBinary(GLuint decimal_number, GLuint range){
     std::vector<GLubyte> binary;
 
     for(GLuint i = 0; i < range; i++){
-        binary.push_back(decimal_number % 2);
+        binary.push_back(GLubyte(decimal_number % 2));
         decimal_number = decimal_number / 2;
     }
 
@@ -249,7 +249,7 @@ std::vector<GLubyte> DecimalToBinary(GLuint decimal_number, GLuint range){
 }
 
 // Gerar pontos, cores e topologia do dígito zero
-GLubyte BuildZero(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLubyte> *topology, GLubyte last_point, std::vector<GLfloat> NDC_center, GLuint external_points_count){
+GLuint BuildZero(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLuint> *topology, GLuint last_point, std::vector<GLfloat> NDC_center, GLuint external_points_count){
     // Definir tamanhos básicos do dígito
     GLfloat x_minor_focus = 0.1f;
     GLfloat x_major_focus = 0.2f;
@@ -291,12 +291,12 @@ GLubyte BuildZero(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *color
     topology->push_back(last_point);
     topology->push_back(last_point + 1);
 
-    GLubyte next_point = 2 * external_points_count + last_point;
+    GLuint next_point = 2 * external_points_count + last_point;
     return next_point;
 }
 
 // Gerar pontos, cores e topologia do dígito um
-GLubyte BuildOne(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLubyte> *topology, GLubyte last_point, std::vector<GLfloat> NDC_center){
+GLuint BuildOne(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLuint> *topology, GLuint last_point, std::vector<GLfloat> NDC_center){
     // Definir tamanhos básicos do dígito
     GLfloat half_base = 0.025f;
     GLfloat half_height = 0.7f;
@@ -339,7 +339,7 @@ GLubyte BuildOne(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors
         topology->push_back(i + last_point);
     }
 
-    GLubyte next_point = 5 + last_point;
+    GLuint next_point = 5 + last_point;
     return next_point;
 }
 
