@@ -32,9 +32,15 @@
 // Headers locais, definidos na pasta "include/"
 #include "utils.h"
 
+// Estruturas relevantes para o programa
+typedef struct {
+    GLuint VAOid;
+    std::vector<GLuint> topology_offsets;
+} VAOParams;
+
 // Declaração de várias funções utilizadas em main().  Essas estão definidas
 // logo após a definição de main() neste arquivo.
-GLuint BuildScene(GLuint count);
+VAOParams BuildScene(GLuint count);
 std::vector<GLubyte> DecimalToBinary(GLuint decimal_number, GLuint range);
 GLuint BuildZero(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLuint> *topology, GLuint last_point, std::vector<GLfloat> NDC_center, GLuint external_points_count);
 GLuint BuildOne(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLuint> *topology, GLuint last_point, std::vector<GLfloat> NDC_center);
@@ -169,11 +175,11 @@ int main()
 }
 
 // Montar os triângulos para um respectivo valor de contagem
-GLuint BuildScene(GLuint count){
-    
+VAOParams BuildScene(GLuint count){
     // Definir dados vetoriais
     GLuint point_coords = 4;
     GLuint color_coding = 4;
+    VAOParams params;
 
     // Definir tamanhos e posições básicas dos dígitos
     GLuint zero_external_points = 16;
@@ -189,19 +195,32 @@ GLuint BuildScene(GLuint count){
     // Alocar o vetor de índices
     std::vector<GLuint> indices;
 
+    // Controlar posições dentro da topologia
+    std::vector<GLuint> topology_offsets;
+
     // Converter decimal para binário (little endian)
     std::vector<GLubyte> binary_count = DecimalToBinary(count, 4);
 
     // Construir os triângulos de acordo com os valores binários
     GLuint last_point = 0;
+    GLuint last_index = 0;
     for(GLuint i : binary_count){
         if(i == 0){
             last_point = BuildZero(&NDC_coefficients, &color_coefficients, &indices, last_point, NDC_center, zero_external_points);
+            last_index += 2 * zero_external_points + 2;
         }else{
             last_point = BuildOne(&NDC_coefficients, &color_coefficients, &indices, last_point, NDC_center);
+            last_index += 5;
         }
+
+        // Atualizar o centro do próximo dígito
         NDC_center[0] -= center_step;
+
+        // Atualizar os pontos da topologia utilizados pelo último dígito
+        topology_offsets.push_back(last_index);
     }
+
+    params.topology_offsets = topology_offsets;
 
     // Construir os VBOs para a posição geométrica
     GLuint VBO_NDC_coefficients_id;
@@ -233,7 +252,8 @@ GLuint BuildScene(GLuint count){
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
     glBindVertexArray(0);
 
-    return vertex_array_object_id;
+    params.VAOid = vertex_array_object_id;
+    return params;
 }
 
 // Converter decimal para um vetor binário (little endian)
