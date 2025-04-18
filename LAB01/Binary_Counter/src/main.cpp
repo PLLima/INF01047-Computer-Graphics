@@ -339,7 +339,7 @@ GLuint BuildOne(GLuint vertex_array_object_id, std::vector<GLfloat> NDC_center){
     GLuint color_coding = 4;
 
     // Definir tamanhos básicos do dígito
-    GLfloat half_base = 0.025f;
+    GLfloat half_base = 0.05f;
     GLfloat half_height = 0.7f;
     GLfloat point_x = -0.1f + NDC_center[0];
     GLfloat point_y = 0.408f + NDC_center[1];
