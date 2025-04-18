@@ -268,20 +268,19 @@ GLuint BuildZero(GLuint vertex_array_object_id, std::vector<GLfloat> NDC_center,
 
     // Definir coordenadas dos pontos
     GLfloat step = 2.0f * M_PI / external_points_count;
-    GLfloat radius;
+    GLfloat angle;
     for(GLuint i = 0; i < external_points_count; i++){
+        angle = step*i;
 
         // Calcular os pontos internos
-        radius = x_minor_focus*y_minor_focus / sqrtf(x_minor_focus*x_minor_focus + (y_minor_focus*y_minor_focus - x_minor_focus*x_minor_focus)*cosf(step*i)*cosf(step*i));
-        coordinates.push_back(radius * cosf(step * i) + NDC_center[0]);
-        coordinates.push_back(radius * sinf(step * i) + NDC_center[1]);
+        coordinates.push_back(x_minor_focus * cosf(angle) + NDC_center[0]);
+        coordinates.push_back(y_minor_focus * sinf(angle) + NDC_center[1]);
         coordinates.push_back(0.0f);
         coordinates.push_back(1.0f);
 
         // Calcular os pontos externos
-        radius = x_major_focus*y_major_focus / sqrtf(x_major_focus*x_major_focus + (y_major_focus*y_major_focus - x_major_focus*x_major_focus)*cosf(step*i)*cosf(step*i));
-        coordinates.push_back(radius * cosf(step * i) + NDC_center[0]);
-        coordinates.push_back(radius * sinf(step * i) + NDC_center[1]);
+        coordinates.push_back(x_major_focus * cosf(angle) + NDC_center[0]);
+        coordinates.push_back(y_major_focus * sinf(angle) + NDC_center[1]);
         coordinates.push_back(0.0f);
         coordinates.push_back(1.0f);
 
