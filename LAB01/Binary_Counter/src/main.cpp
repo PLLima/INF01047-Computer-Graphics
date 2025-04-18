@@ -35,15 +35,16 @@
 // Estruturas relevantes para o programa
 typedef struct {
     GLuint VAOid;
-    std::vector<GLuint> topology_offsets;
+    GLuint size;
+    GLenum draw_mode;
 } VAOParams;
 
 // Declaração de várias funções utilizadas em main().  Essas estão definidas
 // logo após a definição de main() neste arquivo.
-VAOParams BuildScene(GLuint count);
+std::vector<VAOParams> BuildScene(GLuint count);
 std::vector<GLubyte> DecimalToBinary(GLuint decimal_number, GLuint range);
-GLuint BuildZero(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLuint> *topology, GLuint last_point, std::vector<GLfloat> NDC_center, GLuint external_points_count);
-GLuint BuildOne(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLuint> *topology, GLuint last_point, std::vector<GLfloat> NDC_center);
+GLuint BuildZero(GLuint vertex_array_object_id, std::vector<GLfloat> NDC_center, GLuint external_points_count);
+GLuint BuildOne(GLuint vertex_array_object_id, std::vector<GLfloat> NDC_center);
 GLuint BuildTriangles(GLfloat external_radius, GLfloat internal_radius, GLuint external_points_count); // Constrói triângulos para renderização
 void LoadShadersFromFiles(); // Carrega os shaders de vértice e fragmento, criando um programa de GPU
 GLuint LoadShader_Vertex(const char* filename);   // Carrega um vertex shader
@@ -126,15 +127,25 @@ int main()
     //
     LoadShadersFromFiles();
 
-    // Construímos a representação de um triângulo
-    GLfloat external_radius = 0.7f;
-    GLfloat internal_radius = 0.5f;
-    GLuint external_points_count = 16;
-    GLuint vertex_array_object_id = BuildTriangles(external_radius, internal_radius, external_points_count);
+    // Medimos o tempo de execução inicial da aplicação
+    GLuint t0 = (GLuint)glfwGetTime();
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
+    GLuint counter = 0;
+    std::vector<VAOParams> vao_params = BuildScene(counter);
     while (!glfwWindowShouldClose(window))
     {
+        // Calcula se houve mudança de tempo entre cada loop
+        GLuint t1 = (GLuint)glfwGetTime();
+        if(t1 - t0 >= 1){
+            counter++;
+            if(counter > 15){
+                counter = 0;
+            }
+            vao_params = BuildScene(counter);
+            t0 = t1;
+        }
+
         // Aqui executamos as operações de renderização
 
         // Definimos a cor do "fundo" do framebuffer como branco
@@ -147,18 +158,13 @@ int main()
         // os shaders de vértice e fragmentos)
         glUseProgram(g_GpuProgramID);
 
-        // "Ligamos" o VAO. Informamos que queremos utilizar os atributos de
-        // vértices apontados pelo VAO criado pela função BuildTriangles(). Veja
-        // comentários detalhados dentro da definição de BuildTriangles().
-        glBindVertexArray(vertex_array_object_id);
-
         // Pedimos para a GPU rasterizar os vértices apontados pelo VAO como
         // triângulos
-        glDrawElements(GL_TRIANGLE_STRIP, 2 * external_points_count + 2, GL_UNSIGNED_BYTE, 0);
-
-        // "Desligamos" o VAO, evitando assim que operações posteriores venham a
-        // alterar o mesmo. Isso evita bugs
-        glBindVertexArray(0);
+        for(VAOParams i : vao_params){
+            glBindVertexArray(i.VAOid);
+            glDrawElements(i.draw_mode, i.size, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
+        }
 
         glfwSwapBuffers(window);
 
@@ -175,16 +181,15 @@ int main()
 }
 
 // Montar os triângulos para um respectivo valor de contagem
-VAOParams BuildScene(GLuint count){
+std::vector<VAOParams> BuildScene(GLuint count){
     // Definir dados vetoriais
-    GLuint point_coords = 4;
-    GLuint color_coding = 4;
-    VAOParams params;
+    std::vector<VAOParams> params;
 
     // Definir tamanhos e posições básicas dos dígitos
     GLuint zero_external_points = 16;
     GLfloat center_step = 0.5f;
-    std::vector<GLfloat> NDC_center = {0.75f, 0.0f, 0.0f, 1.0f};
+    GLfloat x_first_center = 0.75f;
+    std::vector<GLfloat> NDC_center = {x_first_center, 0.0f, 0.0f, 1.0f};
 
     // Alocar as coordenadas dos pontos
     std::vector<GLfloat> NDC_coefficients;
@@ -195,64 +200,37 @@ VAOParams BuildScene(GLuint count){
     // Alocar o vetor de índices
     std::vector<GLuint> indices;
 
-    // Controlar posições dentro da topologia
-    std::vector<GLuint> topology_offsets;
-
     // Converter decimal para binário (little endian)
     std::vector<GLubyte> binary_count = DecimalToBinary(count, 4);
 
     // Construir os triângulos de acordo com os valores binários
-    GLuint last_point = 0;
-    GLuint last_index = 0;
+    GLuint vertex_array_object_id;
+    GLuint size;
+    GLenum draw_mode;
     for(GLuint i : binary_count){
+
+        // Atualizar estruturas do VAO
+        glGenVertexArrays(1, &vertex_array_object_id);
+        glBindVertexArray(vertex_array_object_id);
+
+        // Construir triângulos de acordo com o dígito correto
         if(i == 0){
-            last_point = BuildZero(&NDC_coefficients, &color_coefficients, &indices, last_point, NDC_center, zero_external_points);
-            last_index += 2 * zero_external_points + 2;
+            draw_mode = GL_TRIANGLE_STRIP;
+            size = BuildZero(vertex_array_object_id, NDC_center, zero_external_points);
         }else{
-            last_point = BuildOne(&NDC_coefficients, &color_coefficients, &indices, last_point, NDC_center);
-            last_index += 5;
+            draw_mode = GL_TRIANGLES;
+            size = BuildOne(vertex_array_object_id, NDC_center);
         }
+        // Armazenar os parâmetros da VAO
+        params.push_back({vertex_array_object_id, size, draw_mode});
 
         // Atualizar o centro do próximo dígito
         NDC_center[0] -= center_step;
 
-        // Atualizar os pontos da topologia utilizados pelo último dígito
-        topology_offsets.push_back(last_index);
+        // Bloquear o VAO
+        glBindVertexArray(0);
     }
 
-    params.topology_offsets = topology_offsets;
-
-    // Construir os VBOs para a posição geométrica
-    GLuint VBO_NDC_coefficients_id;
-    glGenBuffers(1, &VBO_NDC_coefficients_id);
-    GLuint vertex_array_object_id;
-    glGenVertexArrays(1, &vertex_array_object_id);
-    glBindVertexArray(vertex_array_object_id);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_NDC_coefficients_id);
-    glBufferData(GL_ARRAY_BUFFER, NDC_coefficients.size() * sizeof(GLfloat), NDC_coefficients.data(), GL_STATIC_DRAW);
-    GLuint location = 0; // "(location = 0)" em "shader_vertex.glsl"
-    glVertexAttribPointer(location, point_coords, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(location);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // Construir os VBOs para as informações de cores
-    GLuint VBO_color_coefficients_id;
-    glGenBuffers(1, &VBO_color_coefficients_id);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_color_coefficients_id);
-    glBufferData(GL_ARRAY_BUFFER, color_coefficients.size() * sizeof(GLfloat), color_coefficients.data(), GL_STATIC_DRAW);
-    location = 1; // "(location = 1)" em "shader_vertex.glsl"
-    glVertexAttribPointer(location, color_coding, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(location);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // Construir o VBO para a topologia
-    GLuint indices_id;
-    glGenBuffers(1, &indices_id);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices_id);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
-    glBindVertexArray(0);
-
-    params.VAOid = vertex_array_object_id;
     return params;
 }
 
@@ -269,12 +247,24 @@ std::vector<GLubyte> DecimalToBinary(GLuint decimal_number, GLuint range){
 }
 
 // Gerar pontos, cores e topologia do dígito zero
-GLuint BuildZero(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLuint> *topology, GLuint last_point, std::vector<GLfloat> NDC_center, GLuint external_points_count){
+GLuint BuildZero(GLuint vertex_array_object_id, std::vector<GLfloat> NDC_center, GLuint external_points_count){
+    // Definir informações dos vetores
+    GLuint point_coords = 4;
+    GLuint color_coding = 4;
+    
     // Definir tamanhos básicos do dígito
     GLfloat x_minor_focus = 0.1f;
     GLfloat x_major_focus = 0.2f;
     GLfloat y_minor_focus = 0.6f;
     GLfloat y_major_focus = 0.7f;
+
+    // Definir estruturas de VBOs
+    std::vector<GLfloat> coordinates;
+    std::vector<GLfloat> colors;
+    std::vector<GLuint> topology;
+    GLuint VBO_NDC_coefficients_id;
+    GLuint VBO_color_coefficients_id;
+    GLuint indices_id;
 
     // Definir coordenadas dos pontos
     GLfloat step = 2.0f * M_PI / external_points_count;
@@ -282,85 +272,159 @@ GLuint BuildZero(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors
     for(GLuint i = 0; i < external_points_count; i++){
 
         // Calcular os pontos internos
-        radius = x_minor_focus*y_minor_focus \
-                / sqrtf(x_minor_focus*x_minor_focus + (y_minor_focus*y_minor_focus - x_minor_focus*x_minor_focus)*cosf(step*i)*cosf(step*i));
-        coordinates->push_back(radius * cosf(step * i) + NDC_center[0]);
-        coordinates->push_back(radius * sinf(step * i) + NDC_center[1]);
-        coordinates->push_back(0.0f);
-        coordinates->push_back(1.0f);
+        radius = x_minor_focus*y_minor_focus / sqrtf(x_minor_focus*x_minor_focus + (y_minor_focus*y_minor_focus - x_minor_focus*x_minor_focus)*cosf(step*i)*cosf(step*i));
+        coordinates.push_back(radius * cosf(step * i) + NDC_center[0]);
+        coordinates.push_back(radius * sinf(step * i) + NDC_center[1]);
+        coordinates.push_back(0.0f);
+        coordinates.push_back(1.0f);
 
         // Calcular os pontos externos
-        radius = x_major_focus*y_major_focus \
-                / sqrtf(x_major_focus*x_major_focus + (y_major_focus*y_major_focus - x_major_focus*x_major_focus)*cosf(step*i)*cosf(step*i));
-        coordinates->push_back(radius * cosf(step * i) + NDC_center[0]);
-        coordinates->push_back(radius * sinf(step * i) + NDC_center[1]);
-        coordinates->push_back(0.0f);
-        coordinates->push_back(1.0f);
+        radius = x_major_focus*y_major_focus / sqrtf(x_major_focus*x_major_focus + (y_major_focus*y_major_focus - x_major_focus*x_major_focus)*cosf(step*i)*cosf(step*i));
+        coordinates.push_back(radius * cosf(step * i) + NDC_center[0]);
+        coordinates.push_back(radius * sinf(step * i) + NDC_center[1]);
+        coordinates.push_back(0.0f);
+        coordinates.push_back(1.0f);
+
+        // Definir a cor vermelha para o dígito zero e os índices
+        colors.push_back(1.0f);
+        colors.push_back(0.0f);
+        colors.push_back(0.0f);
+        colors.push_back(1.0f);
+
+        colors.push_back(1.0f);
+        colors.push_back(0.0f);
+        colors.push_back(0.0f);
+        colors.push_back(1.0f);
+
+        topology.push_back(GLubyte(2 * i));
+        topology.push_back(GLubyte(2 * i + 1));
     }
+    topology.push_back(0);
+    topology.push_back(1);
 
-    // Definir a cor vermelha para o dígito zero e os índices
-    for(GLuint i = 0; i < external_points_count; i++){
-        colors->push_back(1.0f);
-        colors->push_back(0.0f);
-        colors->push_back(0.0f);
-        colors->push_back(1.0f);
+    // Construir os VBOs para a posição geométrica
 
-        topology->push_back(GLubyte(2 * i + last_point));
-        topology->push_back(GLubyte(2 * i + 1 + last_point));
-    }
-    topology->push_back(last_point);
-    topology->push_back(last_point + 1);
+    glGenBuffers(1, &VBO_NDC_coefficients_id);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_NDC_coefficients_id);
+    glBufferData(GL_ARRAY_BUFFER, coordinates.size() * sizeof(GLfloat), coordinates.data(), GL_STATIC_DRAW);
+    GLuint location = 0; // "(location = 0)" em "shader_vertex.glsl"
+    glVertexAttribPointer(location, point_coords, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(location);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    GLuint next_point = 2 * external_points_count + last_point;
-    return next_point;
+    // Construir os VBOs para as informações de cores
+
+    glGenBuffers(1, &VBO_color_coefficients_id);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_color_coefficients_id);
+    glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(GLfloat), colors.data(), GL_STATIC_DRAW);
+    location = 1; // "(location = 1)" em "shader_vertex.glsl"
+    glVertexAttribPointer(location, color_coding, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(location);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // Construir o VBO para a topologia
+
+    glGenBuffers(1, &indices_id);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices_id);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, topology.size() * sizeof(GLuint), topology.data(), GL_STATIC_DRAW);
+
+    GLuint size = 2 * external_points_count + 2;
+    return size;
 }
 
 // Gerar pontos, cores e topologia do dígito um
-GLuint BuildOne(std::vector<GLfloat> *coordinates, std::vector<GLfloat> *colors, std::vector<GLuint> *topology, GLuint last_point, std::vector<GLfloat> NDC_center){
+GLuint BuildOne(GLuint vertex_array_object_id, std::vector<GLfloat> NDC_center){
+    // Definir informações dos vetores
+    GLuint point_coords = 4;
+    GLuint color_coding = 4;
+
     // Definir tamanhos básicos do dígito
     GLfloat half_base = 0.025f;
     GLfloat half_height = 0.7f;
     GLfloat point_x = -0.1f + NDC_center[0];
     GLfloat point_y = 0.408f + NDC_center[1];
     
+    // Definir estruturas de VBOs
+    std::vector<GLfloat> coordinates;
+    std::vector<GLfloat> colors;
+    std::vector<GLuint> topology;
+    GLuint VBO_NDC_coefficients_id;
+    GLuint VBO_color_coefficients_id;
+    GLuint indices_id;
+
     // Definir coordenadas dos pontos
-    coordinates->push_back(NDC_center[0] - half_base);
-    coordinates->push_back(NDC_center[1] - half_height + 0.008f);
-    coordinates->push_back(0.0f);
-    coordinates->push_back(1.0f);
+    coordinates.push_back(NDC_center[0] - half_base);
+    coordinates.push_back(NDC_center[1] - half_height + 0.008f);
+    coordinates.push_back(0.0f);
+    coordinates.push_back(1.0f);
 
-    coordinates->push_back(NDC_center[0] + half_base);
-    coordinates->push_back(NDC_center[1] - half_height + 0.008f);
-    coordinates->push_back(0.0f);
-    coordinates->push_back(1.0f);
+    coordinates.push_back(NDC_center[0] + half_base);
+    coordinates.push_back(NDC_center[1] - half_height + 0.008f);
+    coordinates.push_back(0.0f);
+    coordinates.push_back(1.0f);
 
-    coordinates->push_back(NDC_center[0] + half_base);
-    coordinates->push_back(NDC_center[1] + half_height + 0.008f);
-    coordinates->push_back(0.0f);
-    coordinates->push_back(1.0f);
+    coordinates.push_back(NDC_center[0] - half_base);
+    coordinates.push_back(NDC_center[1] + half_height + 0.008f);
+    coordinates.push_back(0.0f);
+    coordinates.push_back(1.0f);
 
-    coordinates->push_back(NDC_center[0] - half_base);
-    coordinates->push_back(NDC_center[1] + half_height + 0.008f);
-    coordinates->push_back(0.0f);
-    coordinates->push_back(1.0f);
+    coordinates.push_back(NDC_center[0] + half_base);
+    coordinates.push_back(NDC_center[1] + half_height + 0.008f);
+    coordinates.push_back(0.0f);
+    coordinates.push_back(1.0f);
 
-    coordinates->push_back(point_x);
-    coordinates->push_back(point_y);
-    coordinates->push_back(0.0f);
-    coordinates->push_back(1.0f);
+    coordinates.push_back(point_x);
+    coordinates.push_back(point_y);
+    coordinates.push_back(0.0f);
+    coordinates.push_back(1.0f);
 
-    // Definir a cor azul para o dígito um e os índices
+    // Definir a cor azul para o dígito um
     for(GLuint i = 0; i < 5; i++){
-        colors->push_back(0.0f);
-        colors->push_back(0.0f);
-        colors->push_back(1.0f);
-        colors->push_back(1.0f);
-
-        topology->push_back(i + last_point);
+        colors.push_back(0.0f);
+        colors.push_back(0.0f);
+        colors.push_back(1.0f);
+        colors.push_back(1.0f);
     }
 
-    GLuint next_point = 5 + last_point;
-    return next_point;
+    // Gerar a topologia do dígito um
+    topology.push_back(0);
+    topology.push_back(1);
+    topology.push_back(2);
+    topology.push_back(3);
+    topology.push_back(2);
+    topology.push_back(1);
+    topology.push_back(3);
+    topology.push_back(2);
+    topology.push_back(4);
+
+    // Construir os VBOs para a posição geométrica
+
+    glGenBuffers(1, &VBO_NDC_coefficients_id);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_NDC_coefficients_id);
+    glBufferData(GL_ARRAY_BUFFER, coordinates.size() * sizeof(GLfloat), coordinates.data(), GL_STATIC_DRAW);
+    GLuint location = 0; // "(location = 0)" em "shader_vertex.glsl"
+    glVertexAttribPointer(location, point_coords, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(location);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // Construir os VBOs para as informações de cores
+
+    glGenBuffers(1, &VBO_color_coefficients_id);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_color_coefficients_id);
+    glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(GLfloat), colors.data(), GL_STATIC_DRAW);
+    location = 1; // "(location = 1)" em "shader_vertex.glsl"
+    glVertexAttribPointer(location, color_coding, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(location);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // Construir o VBO para a topologia
+
+    glGenBuffers(1, &indices_id);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices_id);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, topology.size() * sizeof(GLuint), topology.data(), GL_STATIC_DRAW);
+
+    GLuint size = 9;
+    return size;
 }
 
 // Construir triângulos para futura renderização
