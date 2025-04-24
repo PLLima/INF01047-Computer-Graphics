@@ -1,4 +1,0 @@
-/home/pllima0909/Documents/Git/INF01047-Computer-Graphics/build/CMakeFiles/main.dir
-/home/pllima0909/Documents/Git/INF01047-Computer-Graphics/build/CMakeFiles/run.dir
-/home/pllima0909/Documents/Git/INF01047-Computer-Graphics/build/CMakeFiles/edit_cache.dir
-/home/pllima0909/Documents/Git/INF01047-Computer-Graphics/build/CMakeFiles/rebuild_cache.dir
