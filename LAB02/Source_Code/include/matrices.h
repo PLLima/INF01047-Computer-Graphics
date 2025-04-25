@@ -62,11 +62,9 @@ glm::mat4 Matrix_Identity()
 glm::mat4 Matrix_Translate(float tx, float ty, float tz)
 {
     return Matrix(
-        // PREENCHA AQUI A MATRIZ DE TRANSLAÇÃO (3D) EM COORD. HOMOGÊNEAS
-        // UTILIZANDO OS PARÂMETROS tx, ty e tz
-        0.0f , 0.0f , 0.0f , 0.0f ,  // LINHA 1
-        0.0f , 0.0f , 0.0f , 0.0f ,  // LINHA 2
-        0.0f , 0.0f , 0.0f , 0.0f ,  // LINHA 3
+        0.0f , 0.0f , 0.0f ,   tx ,  // LINHA 1
+        0.0f , 0.0f , 0.0f ,   ty ,  // LINHA 2
+        0.0f , 0.0f , 0.0f ,   tz ,  // LINHA 3
         0.0f , 0.0f , 0.0f , 0.0f    // LINHA 4
     );
 }
