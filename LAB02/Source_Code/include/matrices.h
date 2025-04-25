@@ -257,12 +257,10 @@ glm::mat4 Matrix_Camera_View(glm::vec4 position_c, glm::vec4 view_vector, glm::v
 glm::mat4 Matrix_Orthographic(float l, float r, float b, float t, float n, float f)
 {
     glm::mat4 M = Matrix(
-        // PREENCHA AQUI A MATRIZ M DE PROJEÇÃO ORTOGRÁFICA (3D) UTILIZANDO OS
-        // PARÂMETROS l,r,b,t,n,f 
-        0.0f , 0.0f , 0.0f , 0.0f ,  // LINHA 1
-        0.0f , 0.0f , 0.0f , 0.0f ,  // LINHA 2
-        0.0f , 0.0f , 0.0f , 0.0f ,  // LINHA 3
-        0.0f , 0.0f , 0.0f , 0.0f    // LINHA 4
+        2.0f / (r - l) , 0.0f           , 0.0f           , -(r + l) / (r - l) ,  // LINHA 1
+        0.0f           , 2.0f / (t - b) , 0.0f           , -(t + b) / (t - b) ,  // LINHA 2
+        0.0f           , 0.0f           , 2.0f / (f - n) , -(f + n) / (f - n) ,  // LINHA 3
+        0.0f           , 0.0f           , 0.0f           , 1.0f                  // LINHA 4
     );
 
     return M;
