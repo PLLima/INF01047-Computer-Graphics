@@ -153,7 +153,7 @@ float norm(glm::vec4 v)
     float vy = v.y;
     float vz = v.z;
 
-    return sqrt( vx*vx + /* PREENCHA AQUI o que falta para definir norma Euclidiana */ );
+    return sqrt( vx*vx + vy*vy + vz*vz );
 }
 
 // Matriz R de "rotação de um ponto" em relação à origem do sistema de
