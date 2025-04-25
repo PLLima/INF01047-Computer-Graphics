@@ -62,10 +62,10 @@ glm::mat4 Matrix_Identity()
 glm::mat4 Matrix_Translate(float tx, float ty, float tz)
 {
     return Matrix(
-        0.0f , 0.0f , 0.0f ,   tx ,  // LINHA 1
-        0.0f , 0.0f , 0.0f ,   ty ,  // LINHA 2
-        0.0f , 0.0f , 0.0f ,   tz ,  // LINHA 3
-        0.0f , 0.0f , 0.0f , 0.0f    // LINHA 4
+        1.0f , 0.0f , 0.0f ,   tx ,  // LINHA 1
+        0.0f , 1.0f , 0.0f ,   ty ,  // LINHA 2
+        0.0f , 0.0f , 1.0f ,   tz ,  // LINHA 3
+        0.0f , 0.0f , 0.0f , 1.0f    // LINHA 4
     );
 }
 
