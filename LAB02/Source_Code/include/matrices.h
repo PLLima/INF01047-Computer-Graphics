@@ -172,12 +172,10 @@ glm::mat4 Matrix_Rotate(float angle, glm::vec4 axis)
     float vz = v.z;
 
     return Matrix(
-        // PREENCHA AQUI A MATRIZ DE ROTAÇÃO (3D) EM TORNO DO EIXO v EM COORD.
-        // HOMOGÊNEAS, UTILIZANDO OS PARÂMETROS vx, vy, vz, c e s (FÓRMULA DE RODRIGUES)
-        0.0f , 0.0f , 0.0f , 0.0f ,  // LINHA 1
-        0.0f , 0.0f , 0.0f , 0.0f ,  // LINHA 2
-        0.0f , 0.0f , 0.0f , 0.0f ,  // LINHA 3
-        0.0f , 0.0f , 0.0f , 0.0f    // LINHA 4
+        vx*vx*(1 - c) + c    , vx*vy*(1 - c) - s*vz , vx*vz*(1 - c) + s*vy , 0.0f ,  // LINHA 1
+        vx*vy*(1 - c) + s*vz , vy*vy*(1 - c) + c    , vy*vz*(1 - c) - s*vx , 0.0f ,  // LINHA 2
+        vx*vz*(1 - c) - s*vy , vy*vz*(1 - c) + s*vx , vz*vz*(1 - c) + c    , 0.0f ,  // LINHA 3
+        0.0f                 , 0.0f                 , 0.0f                 , 1.0f    // LINHA 4
     );
 }
 
