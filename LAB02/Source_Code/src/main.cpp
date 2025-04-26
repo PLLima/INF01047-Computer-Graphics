@@ -1006,7 +1006,8 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
     // Atualizamos a distância da câmera para a origem utilizando a
     // movimentação da "rodinha", simulando um ZOOM.
-    g_CameraDistance -= 0.1f*yoffset;
+    if(g_UsePerspectiveProjection == false)
+        g_CameraDistance -= 0.1f*yoffset;
 
     // Uma câmera look-at nunca pode estar exatamente "em cima" do ponto para
     // onde ela está olhando, pois isto gera problemas de divisão por zero na
