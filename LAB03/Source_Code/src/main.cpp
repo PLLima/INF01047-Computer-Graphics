@@ -466,6 +466,35 @@ int main()
             PopMatrix(model); // Tiramos da pilha a matriz model guardada anteriormente
         PopMatrix(model); // Tiramos da pilha a matriz model guardada anteriormente
 
+        // Perna esquerda
+        PushMatrix(model); // Guardamos matriz model atual na pilha
+            model = model * Matrix_Translate(0.2f, -1.05f, 0.0f); // Atualizamos matriz model (multiplicação à direita) com uma translação para a coxa esquerda
+            PushMatrix(model); // Guardamos matriz model atual na pilha
+                PushMatrix(model); // Guardamos matriz model atual na pilha
+                    model = model * Matrix_Scale(0.3f, 0.7f, 0.3f); // Atualizamos matriz model (multiplicação à direita) com um escalamento da coxa esquerda
+                    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model)); // Enviamos matriz model atual para a GPU
+                    DrawCube(render_as_black_uniform); // #### COXA ESQUERDA // Desenhamos a coxa esquerda
+                PopMatrix(model); // Tiramos da pilha a matriz model guardada anteriormente
+                PushMatrix(model); // Guardamos matriz model atual na pilha
+                    model = model * Matrix_Translate(0.0f, -0.75f, 0.0f); // Atualizamos matriz model (multiplicação à direita) com a translação da sobrecoxa esquerda
+                    PushMatrix(model); // Guardamos matriz model atual na pilha
+                        model = model * Matrix_Scale(0.25f, 0.75f, 0.25f); // Atualizamos matriz model (multiplicação à direita) com um escalamento da sobrecoxa esquerda
+                        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model)); // Enviamos matriz model atual para a GPU
+                        DrawCube(render_as_black_uniform); // #### SOBRECOXA ESQUERDA // Desenhamos a sobrecoxa esquerda
+                    PopMatrix(model); // Tiramos da pilha a matriz model guardada anteriormente
+                    PushMatrix(model); // Guardamos matriz model atual na pilha
+                        model = model * Matrix_Translate(0.0f, -0.8f, 0.0f); // Atualizamos matriz model (multiplicação à direita) com a translação do pé esquerdo
+                        PushMatrix(model); // Guardamos matriz model atual na pilha
+                            model = model * Matrix_Scale(0.2f, 0.1f, 0.45f); // Atualizamos matriz model (multiplicação à direita) com um escalamento do pé esquerdo
+                            model = model * Matrix_Translate(0.0f, 0.0f, 0.225f); // Atualizamos matriz model (multiplicação à direita) com a translação do pé esquerdo
+                            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model)); // Enviamos matriz model atual para a GPU
+                            DrawCube(render_as_black_uniform); // #### PÉ ESQUERDO // Desenhamos o pé esquerdo
+                        PopMatrix(model); // Tiramos da pilha a matriz model guardada anteriormente
+                    PopMatrix(model); // Tiramos da pilha a matriz model guardada anteriormente
+                PopMatrix(model); // Tiramos da pilha a matriz model guardada anteriormente
+            PopMatrix(model); // Tiramos da pilha a matriz model guardada anteriormente
+        PopMatrix(model); // Tiramos da pilha a matriz model guardada anteriormente
+
         // Neste ponto a matriz model recuperada é a matriz inicial (translação do torso)
 
         // Agora queremos desenhar os eixos XYZ de coordenadas GLOBAIS.
