@@ -110,11 +110,8 @@ bool g_LeftMouseButtonPressed = false;
 // usuário através do mouse (veja função CursorPosCallback()). A posição
 // efetiva da câmera é calculada dentro da função main(), dentro do loop de
 // renderização.
-glm::vec4 scene_origin_c     = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "c", centro da cena
-glm::vec4 camera_position_c  = glm::vec4(2.25f,2.25f,2.25f,1.0f); // Ponto "c", centro da câmera
-glm::vec4 camera_view_vector = scene_origin_c - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
-float g_CameraTheta = 0.0f; // Ângulo no plano ZX em relação ao eixo Z
-float g_CameraPhi = 0.0f;   // Ângulo em relação ao eixo Y
+float g_CameraTheta = 5.0f * 3.141592 / 4.0f; // Ângulo no plano ZX em relação ao eixo Z
+float g_CameraPhi = -1.0f * 3.141592 / 5.0f;   // Ângulo em relação ao eixo Y
 float g_CameraDistance = 2.5f; // Distância da câmera para a origem
 
 // Variável que controla o tipo de projeção utilizada: perspectiva ou ortográfica.
@@ -223,6 +220,9 @@ int main()
     glm::mat4 the_view;
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
+    glm::vec4 scene_origin_c     = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "c", centro da cena
+    glm::vec4 camera_position_c  = glm::vec4(2.25f,2.25f,2.25f,1.0f); // Ponto "c", centro da câmera
+    glm::vec4 camera_view_vector = scene_origin_c - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
     while (!glfwWindowShouldClose(window))
     {
         // Aqui executamos as operações de renderização
@@ -252,14 +252,13 @@ int main()
         // variáveis g_CameraDistance, g_CameraPhi, e g_CameraTheta são
         // controladas pelo mouse do usuário. Veja as funções CursorPosCallback()
         // e ScrollCallback().
-        float r = g_CameraDistance;
-        float y = r*sin(g_CameraPhi);
-        float z = r*cos(g_CameraPhi)*cos(g_CameraTheta);
-        float x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
+        float y = sin(g_CameraPhi);
+        float z = cos(g_CameraPhi)*cos(g_CameraTheta);
+        float x = cos(g_CameraPhi)*sin(g_CameraTheta);
 
         // Abaixo definimos as variáveis que efetivamente definem a câmera virtual.
         // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
-        // camera_position_c  = glm::vec4(x,y,z,1.0f); // Ponto "c", centro da câmera
+        camera_view_vector  = glm::vec4(x,y,z,0.0f); // Ponto "c", centro da câmera
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
 
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
@@ -984,7 +983,7 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 
     // Atualizamos parâmetros da câmera com os deslocamentos
     g_CameraTheta -= 0.01f*dx;
-    g_CameraPhi   += 0.01f*dy;
+    g_CameraPhi   -= 0.01f*dy;
 
     // Em coordenadas esféricas, o ângulo phi deve ficar entre -pi/2 e +pi/2.
     float phimax = 3.141592f/2;
