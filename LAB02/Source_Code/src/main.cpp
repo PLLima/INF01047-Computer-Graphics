@@ -229,6 +229,10 @@ int main()
     glm::vec4 scene_origin_c     = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "c", centro da cena
     glm::vec4 camera_position_c  = glm::vec4(2.25f,2.25f,2.25f,1.0f); // Ponto "c", centro da câmera
     glm::vec4 camera_view_vector = scene_origin_c - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
+    float camera_speed = 1.0f;
+    float previous_time = (float)glfwGetTime();
+    float current_time;
+    float delta_t;
     while (!glfwWindowShouldClose(window))
     {
         // Aqui executamos as operações de renderização
@@ -266,6 +270,21 @@ int main()
         // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
         camera_view_vector  = glm::vec4(x,y,z,0.0f); // Ponto "c", centro da câmera
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
+
+        // Aqui é computado o deslocamento do centro da câmera de acordo com os comandos do teclado pelo usuário.
+        current_time = (float)glfwGetTime();
+        delta_t = current_time - previous_time;
+        previous_time = current_time;
+        glm::vec4 camera_w = -camera_view_vector;
+        glm::vec4 camera_u = crossproduct(camera_up_vector, camera_w);
+        if (g_WKeyPressed)
+            camera_position_c += camera_speed * delta_t * -camera_w;
+        if (g_SKeyPressed)
+            camera_position_c += camera_speed * delta_t * camera_w;
+        if (g_AKeyPressed)
+            camera_position_c += camera_speed * delta_t * -camera_u;
+        if (g_DKeyPressed)
+            camera_position_c += camera_speed * delta_t * camera_u;
 
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
         // definir o sistema de coordenadas da câmera.  Veja slides 2-14, 184-190 e 236-242 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
@@ -1067,6 +1086,8 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     {
         if (action == GLFW_PRESS)
             g_DKeyPressed = true;
+        else if (action == GLFW_RELEASE)
+            g_DKeyPressed = false;
     }
 
     // O código abaixo implementa a seguinte lógica:
