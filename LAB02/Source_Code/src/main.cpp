@@ -106,6 +106,12 @@ float g_AngleZ = 0.0f;
 // pressionado no momento atual. Veja função MouseButtonCallback().
 bool g_LeftMouseButtonPressed = false;
 
+// Variáveis para indicar se o usuário está com alguma das teclas WASD pressionadas no momento.
+bool g_WKeyPressed = false;
+bool g_AKeyPressed = false;
+bool g_SKeyPressed = false;
+bool g_DKeyPressed = false;
+
 // Variáveis que definem a câmera em coordenadas esféricas, controladas pelo
 // usuário através do mouse (veja função CursorPosCallback()). A posição
 // efetiva da câmera é calculada dentro da função main(), dentro do loop de
@@ -1034,6 +1040,34 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     // Se o usuário pressionar a tecla ESC, fechamos a janela.
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
+
+    // Se o usuário pressionar a tecla WASD, atualizamos as respectivas variáveis para true.
+    if (key == GLFW_KEY_W)
+    {
+        if (action == GLFW_PRESS)
+            g_WKeyPressed = true;
+        else if (action == GLFW_RELEASE)
+            g_WKeyPressed = false;
+    }
+    if (key == GLFW_KEY_A)
+    {
+        if (action == GLFW_PRESS)
+            g_AKeyPressed = true;
+        else if (action == GLFW_RELEASE)
+            g_AKeyPressed = false;
+    }
+    if (key == GLFW_KEY_S)
+    {
+        if (action == GLFW_PRESS)
+            g_SKeyPressed = true;
+        else if (action == GLFW_RELEASE)
+            g_SKeyPressed = false;
+    }
+    if (key == GLFW_KEY_D)
+    {
+        if (action == GLFW_PRESS)
+            g_DKeyPressed = true;
+    }
 
     // O código abaixo implementa a seguinte lógica:
     //   Se apertar tecla X       então g_AngleX += delta;
