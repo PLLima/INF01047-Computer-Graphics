@@ -373,6 +373,13 @@ int main()
                         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model)); // Enviamos matriz model atual para a GPU
                         DrawCube(render_as_black_uniform); // #### ANTEBRAÇO DIREITO // Desenhamos o antebraço direito
                     PopMatrix(model); // Tiramos da pilha a matriz model guardada anteriormente
+                    PushMatrix(model); // Guardamos matriz model atual na pilha
+                        model = model * Matrix_Translate(0.0f, -0.65f, 0.0f); // Atualizamos matriz model (multiplicação à direita) com a translação da mão direita
+                    PushMatrix(model); // Guardamos matriz model atual na pilha
+                        model = model * Matrix_Scale(0.2f, 0.1f, 0.2f); // Atualizamos matriz model (multiplicação à direita) com um escalamento da mão direita
+                        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model)); // Enviamos matriz model atual para a GPU
+                        DrawCube(render_as_black_uniform); // #### MÃO DIREITA // Desenhamos a mão direita
+                    PopMatrix(model); // Tiramos da pilha a matriz model guardada anteriormente
                 PopMatrix(model); // Tiramos da pilha a matriz model guardada anteriormente
             PopMatrix(model); // Tiramos da pilha a matriz model guardada anteriormente
         PopMatrix(model); // Tiramos da pilha a matriz model guardada anteriormente
