@@ -414,6 +414,12 @@ int main(int argc, char* argv[])
         glUniform1i(g_object_id_uniform, BUNNY);
         DrawVirtualObject("the_bunny");
 
+        // Desenhamos o modelo do plano
+        model = Matrix_Translate(0.0f,-1.0f,0.0f)
+              * Matrix_Scale(2.0f,1.0f,2.0f);
+        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, PLANE);
+        DrawVirtualObject("the_plane");
 
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
         // terceiro cubo.
@@ -575,9 +581,7 @@ void ComputeNormals(ObjModel* model)
             const glm::vec4  b = vertices[1];
             const glm::vec4  c = vertices[2];
 
-            // PREENCHA AQUI o cálculo da normal de um triângulo cujos vértices
-            // estão nos pontos "a", "b", e "c", definidos no sentido anti-horário.
-            const glm::vec4  n = glm::vec4(0.0f,0.0f,0.0f,0.0f);
+            const glm::vec4  n = crossproduct(b - a, c - a) / norm(crossproduct(b - a, c - a));
 
             for (size_t vertex = 0; vertex < 3; ++vertex)
             {
