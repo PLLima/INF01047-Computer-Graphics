@@ -85,20 +85,19 @@ void main()
 
         vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
 
-        U = 0.0;
-        V = 0.0;
+        // Vetor projeção do ponto do objeto na esfera
+        vec4 position_model_proj = normalize(position_model - bbox_center);
+
+        // Conversão de coordenadas cartesianas para esféricas
+        float theta = atan(position_model_proj.x, position_model_proj.z);
+        float phi = asin(position_model_proj.y);
+
+        U = (theta + M_PI) / (2.0 * M_PI);
+        V = (phi + M_PI_2) / M_PI;
     }
     else if ( object_id == BUNNY )
     {
-        // PREENCHA AQUI as coordenadas de textura do coelho, computadas com
-        // projeção planar XY em COORDENADAS DO MODELO. Utilize como referência
-        // o slides 99-104 do documento Aula_20_Mapeamento_de_Texturas.pdf,
-        // e também use as variáveis min*/max* definidas abaixo para normalizar
-        // as coordenadas de textura U e V dentro do intervalo [0,1]. Para
-        // tanto, veja por exemplo o mapeamento da variável 'p_v' utilizando
-        // 'h' no slides 158-160 do documento Aula_20_Mapeamento_de_Texturas.pdf.
-        // Veja também a Questão 4 do Questionário 4 no Moodle.
-
+        // Projeção planar pelo plano XY
         float minx = bbox_min.x;
         float maxx = bbox_max.x;
 
